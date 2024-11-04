@@ -5,6 +5,7 @@ const express = require('express');
 
 // initialize the app
 const app = express();
+app.use(express.json());
 
 // define a port
 const PORT = process.env.PORT || 3000;

@@ -1,21 +1,38 @@
 const express = require('express')
 const router = express.Router()
+const tasks = []
 
 // define a sample route
 router.get('/', (req, res) => { 
-    res.send('Task manager home!'); 
+    res.json(tasks)
 });
 
 router.post('/', (req, res) => {
-    res.send('Create a new task');
+    const { name , description } = req.body;
+    tasks.push({id: tasks.length + 1, name, description})
+    res.status(201).json(newTask);
 });
 
 router.put('/:id', (req, res) => {
-    res.send(`Update task with ID ${req.params.id}`);
+    const { id } = req.params;
+    const { name, description } = req.body;
+    const task = tasks.find(t => t.id == parseInt(id));
+
+    if(!task) return res.status(404).send('Task not found');
+
+    task.name = name;
+    task.description = description;
+    res.json(task)
 });
 
 router.delete('/:id', (req, res) => {
-    res.send(`Delete task with ID ${req.params.id}`);
+    const { id } = req.params;
+    const task = tasks.find(t => t.id == parseInt(id));
+
+    if(!task) return res.status(404).send('Task not found');
+
+    tasks.splice(task, 1);    
+    res.status(204).send();
 });
 
 module.exports = router;
