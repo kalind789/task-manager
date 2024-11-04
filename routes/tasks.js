@@ -1,38 +1,60 @@
-const express = require('express')
-const router = express.Router()
-const tasks = []
+const express = require('express');
+const router = express.Router();
+const Task = require('./Task');
 
-// define a sample route
-router.get('/', (req, res) => { 
-    res.json(tasks)
+// Define a sample route to get all tasks
+router.get('/', async (req, res, next) => { 
+    try {
+        const tasks = await Task.find();
+        res.json(tasks);
+    } catch (err) {
+        next(err); // Pass error to the error-handling middleware
+    }
 });
 
-router.post('/', (req, res) => {
-    const { name , description } = req.body;
-    tasks.push({id: tasks.length + 1, name, description})
-    res.status(201).json(newTask);
+// Route to create a new task
+router.post('/', async (req, res, next) => {
+    try {
+        const { name, description } = req.body;
+        const newTask = new Task({ name, description });
+        
+        await newTask.save();
+        res.status(201).json(newTask); // Respond with the created task
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.put('/:id', (req, res) => {
-    const { id } = req.params;
-    const { name, description } = req.body;
-    const task = tasks.find(t => t.id == parseInt(id));
+// Route to update an existing task by ID
+router.put('/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { name, description, completed } = req.body;
 
-    if(!task) return res.status(404).send('Task not found');
+        const updatedTask = await Task.findByIdAndUpdate(
+            id,
+            { name, description, completed },
+            { new: true }
+        );
 
-    task.name = name;
-    task.description = description;
-    res.json(task)
+        if (!updatedTask) return res.status(404).send('Task not found');
+        res.json(updatedTask); // Respond with the updated task
+    } catch (err) {
+        next(err);
+    }
 });
 
-router.delete('/:id', (req, res) => {
-    const { id } = req.params;
-    const task = tasks.find(t => t.id == parseInt(id));
-
-    if(!task) return res.status(404).send('Task not found');
-
-    tasks.splice(task, 1);    
-    res.status(204).send();
+// Route to delete a task by ID
+router.delete('/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const deletedTask = await Task.findByIdAndDelete(id);
+        
+        if (!deletedTask) return res.status(404).send('Task not found');
+        res.status(204).send(); // No content response
+    } catch (err) {
+        next(err); // Pass error to the error-handling middleware
+    }
 });
 
 module.exports = router;
